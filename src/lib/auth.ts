@@ -11,7 +11,16 @@ const THEME_COOKIE = "bk_theme";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 function secret(): Uint8Array {
-  const value = process.env.AUTH_SECRET || "dev-only-insecure-secret-change-me-please-32";
+  const value = process.env.AUTH_SECRET;
+  if (!value) {
+    // A missing secret in production would mean every session cookie is signed
+    // with a value published in this repo — anyone could forge a login. Fail
+    // the request instead of quietly accepting that.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SECRET is not set. Add it to the deployment's environment variables.");
+    }
+    return new TextEncoder().encode("dev-only-insecure-secret-change-me-please-32");
+  }
   return new TextEncoder().encode(value);
 }
 
