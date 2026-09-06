@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MessageSquare, Bell, Info, Send } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalances } from "@/lib/billing";
 import { isSimulationMode, rentReminderText } from "@/lib/sms";
@@ -25,7 +25,7 @@ import { label, tone, SMS_STATUS, SMS_TYPES, type Lang } from "@/lib/constants";
 
 export default async function SmsPage() {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const month = currentMonth();
 
   const tenants = await prisma.tenant.findMany({

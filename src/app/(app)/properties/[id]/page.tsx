@@ -11,7 +11,7 @@ import {
   Wallet,
   ReceiptText,
 } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   PageHeader,
@@ -103,7 +103,7 @@ function UnitFormFields({ lang, unit }: { lang: Lang; unit?: Record<string, unkn
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const month = currentMonth();
   const { start, end } = monthRange(month);
 

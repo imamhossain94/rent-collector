@@ -86,7 +86,14 @@ export function Modal({
         {trigger}
       </span>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
+          // A server action inside the modal keeps running after the dialog
+          // unmounts, so close once the submit is on its way — otherwise the
+          // form sits there looking like nothing happened while the row is
+          // already being written.
+          onSubmitCapture={() => window.setTimeout(close, 450)}
+        >
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={close} />
           <div
             className={cx(

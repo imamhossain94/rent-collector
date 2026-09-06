@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Building2, Plus, MapPin, DoorOpen, Users, Wallet } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, EmptyState, Badge, Progress } from "@/components/ui";
 import { money, num, currentMonth, monthRange } from "@/lib/format";
@@ -10,7 +10,7 @@ import { percent, sum } from "@/lib/utils";
 
 export default async function PropertiesPage() {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const { start, end } = monthRange(currentMonth());
 
   const properties = await prisma.property.findMany({

@@ -1,5 +1,5 @@
 import { Building2 } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
 import { PropertyForm } from "@/components/property-form";
 import { createPropertyAction } from "@/app/actions/properties";
@@ -8,7 +8,7 @@ import type { Lang } from "@/lib/constants";
 
 export default async function NewPropertyPage() {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">

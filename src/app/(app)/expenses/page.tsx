@@ -1,5 +1,5 @@
 import { Wallet, Plus } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getPropertyOptions } from "@/lib/queries";
 import {
@@ -36,7 +36,7 @@ export default async function ExpensesPage({
   const { start, end } = monthRange(month);
 
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [expenses, properties, collected] = await Promise.all([
     prisma.expense.findMany({

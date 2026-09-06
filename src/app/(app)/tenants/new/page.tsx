@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { getUnitOptions } from "@/lib/queries";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
 import { TenantForm } from "@/components/tenant-form";
@@ -15,7 +15,7 @@ export default async function NewTenantPage({
 }) {
   const { unitId } = await searchParams;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const units = await getUnitOptions(user.id);
 
   return (

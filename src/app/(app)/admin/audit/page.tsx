@@ -1,5 +1,5 @@
 import { ScrollText } from "lucide-react";
-import { requireSuperAdmin, getLang } from "@/lib/auth";
+import { requireSuperAdmin, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, CardHead, TableWrap, EmptyState, Badge } from "@/components/ui";
 import { FilterSelect } from "@/components/client-bits";
@@ -31,7 +31,7 @@ export default async function AuditPage({
   const entity = sp.entity ?? "";
 
   const admin = await requireSuperAdmin();
-  const lang = await getLang((admin.language as Lang) ?? "bn");
+  const lang = userLang(admin);
 
   const logs = await prisma.auditLog.findMany({
     where: entity ? { entity } : {},

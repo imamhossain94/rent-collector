@@ -1,5 +1,5 @@
 import { Users, Plus, KeyRound, Power } from "lucide-react";
-import { requireSuperAdmin, getLang } from "@/lib/auth";
+import { requireSuperAdmin, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   PageHeader,
@@ -38,13 +38,21 @@ export default async function AdminUsersPage({
   const role = sp.role ?? "";
 
   const admin = await requireSuperAdmin();
-  const lang = await getLang((admin.language as Lang) ?? "bn");
+  const lang = userLang(admin);
 
   const users = await prisma.user.findMany({
     where: {
       ...(status ? { status } : {}),
       ...(role ? { role } : {}),
-      ...(q ? { OR: [{ name: { contains: q } }, { phone: { contains: q } }, { businessName: { contains: q } }] } : {}),
+      ...(q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" as const } },
+              { phone: { contains: q } },
+              { businessName: { contains: q, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
     },
     orderBy: { createdAt: "desc" },
     select: {

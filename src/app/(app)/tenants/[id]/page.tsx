@@ -12,7 +12,7 @@ import {
   Zap,
   Printer,
 } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalance } from "@/lib/billing";
 import {
@@ -47,7 +47,7 @@ import {
 export default async function TenantDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const tenant = await prisma.tenant.findFirst({
     where: { id, ownerId: user.id },

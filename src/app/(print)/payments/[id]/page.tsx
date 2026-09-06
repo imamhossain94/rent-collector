@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalance } from "@/lib/billing";
 import { PrintFrame, DocHeader, SignatureRow } from "@/components/print-doc";
@@ -10,7 +10,7 @@ import { PAYMENT_METHODS, type Lang } from "@/lib/constants";
 export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const payment = await prisma.payment.findFirst({
     where: { id, ownerId: user.id },

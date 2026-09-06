@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReceiptText, Printer, MessageSquare, Ban, Pencil, ListPlus } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalance, payableOf } from "@/lib/billing";
 import {
@@ -30,7 +30,7 @@ import { label, tone, BILL_STATUS, BILL_ITEM_TYPES, PAYMENT_METHODS, type Lang }
 export default async function BillDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const bill = await prisma.bill.findFirst({
     where: { id, ownerId: user.id },

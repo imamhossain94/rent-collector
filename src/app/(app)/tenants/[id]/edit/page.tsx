@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getUnitOptions } from "@/lib/queries";
 import { PageHeader } from "@/components/ui";
@@ -13,7 +13,7 @@ import type { Lang } from "@/lib/constants";
 export default async function EditTenantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [tenant, units] = await Promise.all([
     prisma.tenant.findFirst({ where: { id, ownerId: user.id } }),

@@ -123,6 +123,17 @@ export async function verifyPassword(plain: string, hash: string): Promise<boole
 
 /* ---------------------- preferences (cookies) --------------------- */
 
+/**
+ * Language for a signed-in user. Bangla is the default, and the account's own
+ * preference wins — a `bk_lang` cookie left behind on some browser can't flip
+ * the app to English behind the owner's back. The cookie only decides for
+ * visitors who are not signed in (landing, login, register).
+ */
+export function userLang(user: { language?: string | null } | null | undefined, fallback: Lang = "bn"): Lang {
+  const value = user?.language;
+  return value === "en" || value === "bn" ? value : fallback;
+}
+
 export async function getLang(fallback: Lang = "bn"): Promise<Lang> {
   const jar = await cookies();
   const value = jar.get(LANG_COOKIE)?.value;

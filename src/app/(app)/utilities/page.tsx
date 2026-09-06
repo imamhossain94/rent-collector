@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Gauge, CheckCircle2, Zap, Plus, BatteryCharging, Info } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveTenants, getPropertyOptions } from "@/lib/queries";
 import { PageHeader, Card, CardHead, EmptyState, StatCard, TableWrap, Money, Badge } from "@/components/ui";
@@ -23,7 +23,7 @@ export default async function UtilitiesPage({
   const propertyId = sp.property ?? "";
 
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [tenants, properties, propertyRows] = await Promise.all([
     getActiveTenants(user.id, propertyId || null),

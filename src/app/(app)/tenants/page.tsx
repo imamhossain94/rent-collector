@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Users, Plus, Phone, Bell, UserPlus } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalances } from "@/lib/billing";
 import {
@@ -36,7 +36,7 @@ export default async function TenantsPage({
 }) {
   const { q = "", status = "ACTIVE", property = "" } = await searchParams;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [tenants, properties] = await Promise.all([
     prisma.tenant.findMany({
@@ -47,7 +47,7 @@ export default async function TenantsPage({
         ...(q
           ? {
               OR: [
-                { name: { contains: q } },
+                { name: { contains: q, mode: "insensitive" } },
                 { phone: { contains: q } },
                 { nid: { contains: q } },
               ],

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, Users, Building2, Wallet, ReceiptText, ArrowRight } from "lucide-react";
-import { requireSuperAdmin, getLang } from "@/lib/auth";
+import { requireSuperAdmin, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, CardHead, TableWrap, StatCard, Badge, Money, EmptyState } from "@/components/ui";
 import { money, num, formatDate, currentMonth, monthRange, initials } from "@/lib/format";
@@ -10,7 +10,7 @@ import { Avatar } from "@/components/ui";
 
 export default async function AdminOverviewPage() {
   const admin = await requireSuperAdmin();
-  const lang = await getLang((admin.language as Lang) ?? "bn");
+  const lang = userLang(admin);
   const { start, end } = monthRange(currentMonth());
 
   const [owners, properties, units, tenants, bills, allTime, thisMonth, recent, topOwners] = await Promise.all([

@@ -6,8 +6,7 @@ payments and hands over a printable money receipt. A super admin manages every u
 
 ![Rent Collector dashboard](docs/dashboard.png)
 
-Built with Next.js 15 (App Router, server actions), Prisma + **SQLite** (swappable for PostgreSQL or
-Firestore later), Tailwind v4, bilingual Bangla/English UI, light dashboard with a dark mode toggle.
+Built with Next.js 15 (App Router, server actions), Prisma + **PostgreSQL**, Tailwind v4, bilingual Bangla/English UI, light dashboard with a dark mode toggle.
 
 Type: **Inter** for Latin, **Noto Sans Bengali** for Bangla (close enough in metrics that mixed
 Bangla/English table rows stay on one baseline), JetBrains Mono reserved for identifiers like bill and
@@ -24,8 +23,9 @@ The whole interface flips to Bangla from the top bar, numerals included:
 
 ```bash
 npm install
-npm run setup      # prisma generate + db push + seed demo data
-npm run dev        # http://localhost:3000
+cp .env.example .env      # then put your Postgres URL + AUTH_SECRET in it
+npm run setup             # prisma generate + db push + seed demo data
+npm run dev               # http://localhost:3000
 ```
 
 Demo logins (created by the seed):
@@ -38,10 +38,10 @@ Demo logins (created by the seed):
 
 Other scripts: `npm run db:reset` (wipe + reseed), `npm run db:studio`, `npm run build`, `npm start`.
 
-Environment (`.env`):
+Environment (`.env`) — see `.env.example`:
 
 ```
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
 AUTH_SECRET="a long random string"
 SMS_PROVIDER=""      # blank = simulation mode: messages are stored, not sent
 SMS_API_KEY=""
@@ -125,17 +125,52 @@ gas line).
 
 ---
 
-## Moving off SQLite later
+## Deploying to Vercel
 
-The schema deliberately avoids SQLite-only constructs and models enums as `String` columns with the
-values kept in `src/lib/constants.ts`.
+The app is a stock Next.js App Router project, so Vercel needs no special build
+configuration — only environment variables and a database it can reach.
 
-- **PostgreSQL**: change `provider = "postgresql"` in `prisma/schema.prisma`, point `DATABASE_URL` at the
-  new database, run `prisma migrate dev`. No application code changes; optionally convert the string
-  columns to real Postgres enums.
-- **Firestore**: every model maps to a collection with the same field names; relations are already plain
-  foreign-key ids. The read paths live in `src/lib/queries.ts` and `src/lib/billing.ts` — that's the surface
-  a Firestore adapter would replace.
+1. **Push the repo** and import it at [vercel.com/new](https://vercel.com/new). Framework preset
+   *Next.js*, root directory `./`, build command left as the default (`npm run build`, which runs
+   `prisma generate && next build`).
+2. **Environment variables** (Project → Settings → Environment Variables, add to *Production*,
+   *Preview* and *Development*):
+
+   | Key | Value |
+   | --- | --- |
+   | `DATABASE_URL` | your Postgres URL — on Neon use the **pooled** `-pooler` host |
+   | `AUTH_SECRET` | a long random string (`openssl rand -base64 32`) |
+   | `APP_URL` | `https://your-app.vercel.app` |
+   | `SMS_PROVIDER`, `SMS_API_KEY`, `SMS_SENDER_ID` | optional; blank keeps SMS in simulation mode |
+
+3. **Create the tables once** — Vercel builds don't touch your schema. From your machine, with the
+   same `DATABASE_URL` in `.env`:
+
+   ```bash
+   npm run deploy:db      # prisma db push
+   npm run db:seed        # optional demo data — wipes existing rows first
+   ```
+
+4. **Deploy.** Every push to `main` ships; pull requests get preview URLs.
+
+Notes that matter in production:
+
+- **Use the pooled connection.** Serverless functions open a lot of short-lived connections; Neon's
+  `-pooler` host (or Supabase's pooler / PgBouncer) is what keeps you under the limit. If Prisma
+  complains about prepared statements, append `?pgbouncer=true` to `DATABASE_URL`.
+- **`prisma migrate` needs the direct host.** `db push` works over the pooler; proper migrations
+  don't. Set `DIRECT_URL` to the unpooled host and uncomment `directUrl` in `prisma/schema.prisma`.
+- **`AUTH_SECRET` must be stable.** Change it and every signed-in session is invalidated.
+- **Sessions are JWT cookies**, so there is nothing server-side to share between instances.
+- **Region**: put the Vercel functions in the same region as the database (Neon `us-east-2` →
+  Vercel `iad1`/`cle1`) — cross-region round trips dominate the request time otherwise.
+
+### Portability
+
+Enums are modelled as `String` columns with the values kept in `src/lib/constants.ts`, and the schema
+avoids provider-specific constructs, so it also runs on SQLite locally (`provider = "sqlite"`,
+`DATABASE_URL="file:./dev.db"`) and maps cleanly onto Firestore collections later — every relation is
+already a plain foreign-key id, and the read paths live in `src/lib/queries.ts` and `src/lib/billing.ts`.
 
 ## Project layout
 

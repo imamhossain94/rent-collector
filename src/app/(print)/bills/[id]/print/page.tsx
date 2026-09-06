@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { payableOf } from "@/lib/billing";
 import { PrintFrame, DocHeader, SignatureRow } from "@/components/print-doc";
@@ -10,7 +10,7 @@ import { BILL_ITEM_TYPES, type Lang } from "@/lib/constants";
 export default async function BillPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const bill = await prisma.bill.findFirst({
     where: { id, ownerId: user.id },

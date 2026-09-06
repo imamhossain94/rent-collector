@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ReceiptText } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { getBillTenantOptions } from "@/lib/queries";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
 import { BillEditor } from "@/components/bill-editor";
@@ -16,7 +16,7 @@ export default async function NewBillPage({
 }) {
   const sp = await searchParams;
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const options = await getBillTenantOptions(user.id);
 
   return (

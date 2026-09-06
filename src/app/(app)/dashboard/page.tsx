@@ -13,7 +13,7 @@ import {
   Bell,
   Plus,
 } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalances } from "@/lib/billing";
 import { currentMonth, monthLabel, monthRange, lastMonths, monthShort, money, num, formatDate, initials } from "@/lib/format";
@@ -25,7 +25,7 @@ import type { Lang } from "@/lib/constants";
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const month = currentMonth();
   const { start, end } = monthRange(month);
 

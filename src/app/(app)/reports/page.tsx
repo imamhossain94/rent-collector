@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BarChart3, TrendingUp } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tenantBalances } from "@/lib/billing";
 import { PageHeader, Card, CardHead, TableWrap, StatCard, Money, EmptyState } from "@/components/ui";
@@ -12,7 +12,7 @@ import type { Lang } from "@/lib/constants";
 
 export default async function ReportsPage() {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const months = lastMonths(12);
   const windowStart = monthRange(months[0]).start;

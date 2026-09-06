@@ -1,5 +1,5 @@
 import { Settings, Languages, Database, LogOut, ShieldCheck } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, CardHead, StatCard } from "@/components/ui";
 import { ProfileForm, PasswordForm } from "@/components/settings-forms";
@@ -12,7 +12,7 @@ import { label, PLANS, type Lang } from "@/lib/constants";
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [properties, units, tenants, bills, payments, joined] = await Promise.all([
     prisma.property.count({ where: { ownerId: user.id } }),

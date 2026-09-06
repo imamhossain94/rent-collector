@@ -1,11 +1,11 @@
-import { requireUser, getLang, getTheme } from "@/lib/auth";
+import { requireUser, getTheme, userLang } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { currentMonth, monthLabel } from "@/lib/format";
 import type { Lang } from "@/lib/constants";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
   const theme = await getTheme();
 
   return (

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { HandCoins, Plus, Printer } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveTenants } from "@/lib/queries";
 import { tenantBalances } from "@/lib/billing";
@@ -24,7 +24,7 @@ export default async function PaymentsPage({
   const { start, end } = monthRange(month);
 
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [payments, tenants] = await Promise.all([
     prisma.payment.findMany({

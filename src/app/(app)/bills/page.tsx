@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ReceiptText, Plus, Printer, CheckCircle2, Zap } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, CardHead, TableWrap, EmptyState, Badge, StatCard, Money } from "@/components/ui";
 import { FilterSelect, Modal } from "@/components/client-bits";
@@ -22,7 +22,7 @@ export default async function BillsPage({
   const propertyId = sp.property ?? "";
 
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [bills, properties] = await Promise.all([
     prisma.bill.findMany({

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Zap, AlertTriangle, CheckCircle2, Gauge } from "lucide-react";
-import { requireUser, getLang } from "@/lib/auth";
+import { requireUser, userLang } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveTenants, getPropertyOptions } from "@/lib/queries";
 import { buildBillItems, tenantBalances, dueDateFor, type TenantForBilling } from "@/lib/billing";
@@ -22,7 +22,7 @@ export default async function GenerateBillsPage({
   const propertyId = sp.property ?? "";
 
   const user = await requireUser();
-  const lang = await getLang((user.language as Lang) ?? "bn");
+  const lang = userLang(user);
 
   const [tenants, properties] = await Promise.all([
     getActiveTenants(user.id, propertyId || null),

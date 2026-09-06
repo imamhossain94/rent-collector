@@ -1,16 +1,21 @@
-// Bhara Khata — Rent Collector
-// SQLite for now. To move to PostgreSQL: change provider to "postgresql" and
-// point DATABASE_URL at the new database. The schema avoids SQLite-only
-// constructs and models enums as String columns (constants live in
-// src/lib/constants.ts), so it ports to Postgres/Firestore unchanged.
+// Rent Collector — data model
+//
+// PostgreSQL (Neon). Enums are modelled as String columns with the values kept
+// in src/lib/constants.ts, so the same schema also runs on SQLite locally and
+// maps cleanly onto Firestore collections later.
+//
+// Note for migrations: DATABASE_URL points at Neon's pooled (-pooler) host,
+// which is right for the app but not for schema changes. Set DIRECT_URL to the
+// unpooled host and uncomment directUrl below before running `prisma migrate`.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 model User {
