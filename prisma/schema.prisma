@@ -1,0 +1,332 @@
+// Bhara Khata — Rent Collector
+// SQLite for now. To move to PostgreSQL: change provider to "postgresql" and
+// point DATABASE_URL at the new database. The schema avoids SQLite-only
+// constructs and models enums as String columns (constants live in
+// src/lib/constants.ts), so it ports to Postgres/Firestore unchanged.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  phone        String    @unique
+  email        String?   @unique
+  passwordHash String
+  role         String    @default("OWNER") // SUPER_ADMIN | OWNER
+  status       String    @default("ACTIVE") // ACTIVE | SUSPENDED
+  plan         String    @default("FREE") // FREE | PRO
+  language     String    @default("bn") // bn | en
+  address      String?
+  nid          String?
+  businessName String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  properties Property[]
+  tenants    Tenant[]
+  bills      Bill[]
+  payments   Payment[]
+  expenses   Expense[]
+  messages   SmsLog[]
+  auditLogs  AuditLog[]
+  recharges  MeterRecharge[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model Property {
+  id          String  @id @default(cuid())
+  ownerId     String
+  name        String
+  type        String  @default("BUILDING") // BUILDING | HOUSE | SHOP | MARKET | GARAGE | LAND | OTHER
+  addressLine String?
+  area        String?
+  city        String?
+  district    String?
+  division    String?
+  description String?
+
+  // The building's own DESCO connection. Prepaid meters are topped up with
+  // money (not read in units), so recharges are tracked in taka — see
+  // MeterRecharge — and recovered from tenants through their sub-meters.
+  mainMeterNumber String?
+  meterType       String  @default("PREPAID") // PREPAID | POSTPAID
+
+  // Bangladesh billing defaults, inherited by every unit/tenant of the property
+  electricityRate Float @default(9)
+  gasCharge       Float @default(0)
+  waterCharge     Float @default(0)
+  serviceCharge   Float @default(0)
+  dueDay          Int   @default(10)
+  lateFee         Float @default(0)
+
+  status    String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  units     Unit[]
+  bills     Bill[]
+  expenses  Expense[]
+  recharges MeterRecharge[]
+
+  @@index([ownerId])
+}
+
+model Unit {
+  id         String @id @default(cuid())
+  propertyId String
+  name       String // "A-1", "Shop 3", "Garage"
+  floor      String?
+  type       String @default("FLAT") // FLAT | ROOM | SHOP | OFFICE | GARAGE | SEAT | OTHER
+  bedrooms   Int    @default(0)
+  bathrooms  Int    @default(0)
+  sizeSqft   Int?
+  rentAmount Float  @default(0)
+
+  serviceCharge  Float   @default(0)
+  meterNumber    String?
+  gasMeterNumber String?
+  status         String  @default("VACANT") // VACANT | OCCUPIED | MAINTENANCE
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenants  Tenant[]
+  bills    Bill[]
+
+  @@index([propertyId])
+  @@index([status])
+}
+
+model Tenant {
+  id      String  @id @default(cuid())
+  ownerId String
+  unitId  String?
+
+  name             String
+  phone            String
+  altPhone         String?
+  email            String?
+  nid              String?
+  occupation       String?
+  permanentAddress String?
+  familyMembers    Int     @default(1)
+  emergencyName    String?
+  emergencyPhone   String?
+
+  moveInDate     DateTime  @default(now())
+  moveOutDate    DateTime?
+  agreementStart DateTime?
+  agreementEnd   DateTime?
+
+  rentAmount    Float @default(0)
+  serviceCharge Float @default(0)
+  advanceAmount Float @default(0) // jamanat / security deposit
+  openingDue    Float @default(0) // due carried in from the paper khata
+
+  // Utilities
+  electricityMode  String  @default("SUBMETER") // SUBMETER | FIXED | NONE
+  electricityRate  Float   @default(9)
+  fixedElectricity Float   @default(0)
+  gasCharge        Float   @default(0)
+  waterCharge      Float   @default(0)
+  otherCharge      Float   @default(0)
+  otherChargeLabel String?
+
+  status    String   @default("ACTIVE") // ACTIVE | NOTICE | LEFT
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner    User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  unit     Unit?          @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  bills    Bill[]
+  payments Payment[]
+  readings MeterReading[]
+  messages SmsLog[]
+
+  @@index([ownerId])
+  @@index([unitId])
+  @@index([status])
+}
+
+model Bill {
+  id         String  @id @default(cuid())
+  ownerId    String
+  tenantId   String
+  unitId     String?
+  propertyId String
+
+  billNo       String   @unique
+  billingMonth String // "2026-09"
+  issueDate    DateTime @default(now())
+  dueDate      DateTime
+
+  previousDue   Float @default(0)
+  discount      Float @default(0) // "less" written on the bill
+  advanceAdjust Float @default(0) // settled against the tenant's deposit/advance
+  lateFee       Float @default(0)
+  subtotal    Float @default(0)
+  total       Float @default(0)
+  paidAmount  Float @default(0)
+
+  status    String   @default("UNPAID") // UNPAID | PARTIAL | PAID | VOID
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner    User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit     Unit?          @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  property Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  items    BillItem[]
+  payments Payment[]
+  readings MeterReading[]
+
+  @@unique([tenantId, billingMonth])
+  @@index([ownerId, billingMonth])
+  @@index([status])
+}
+
+model BillItem {
+  id     String  @id @default(cuid())
+  billId String
+  type   String // RENT | ELECTRICITY | GAS | WATER | SERVICE | GARBAGE | SECURITY | LIFT | INTERNET | PARKING | FINE | OTHER
+  label  String
+  qty    Float   @default(1)
+  rate   Float   @default(0)
+  amount Float   @default(0)
+  meta   String? // e.g. "prev 1200, cur 1290 (90 unit)"
+
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@index([billId])
+}
+
+model MeterReading {
+  id           String   @id @default(cuid())
+  tenantId     String
+  billId       String?
+  billingMonth String
+  type         String   @default("ELECTRICITY") // ELECTRICITY | GAS | WATER
+  previous     Float    @default(0)
+  current      Float    @default(0)
+  units        Float    @default(0)
+  rate         Float    @default(0)
+  amount       Float    @default(0)
+  readingDate  DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bill   Bill?  @relation(fields: [billId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, billingMonth, type])
+  @@index([tenantId])
+}
+
+model Payment {
+  id        String  @id @default(cuid())
+  ownerId   String
+  tenantId  String
+  billId    String?
+  receiptNo String  @unique
+
+  amount    Float
+  method    String   @default("CASH") // CASH | BKASH | NAGAD | ROCKET | BANK | CHEQUE | OTHER
+  txnRef    String?
+  paidAt    DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+
+  owner  User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bill   Bill?  @relation(fields: [billId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, paidAt])
+  @@index([tenantId])
+}
+
+model Expense {
+  id         String   @id @default(cuid())
+  ownerId    String
+  propertyId String?
+  category   String   @default("REPAIR") // REPAIR | MAINTENANCE | SALARY | UTILITY | TAX | CLEANING | SECURITY | OTHER
+  title      String
+  amount     Float
+  spentAt    DateTime @default(now())
+  vendor     String?
+  note       String?
+  createdAt  DateTime @default(now())
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, spentAt])
+}
+
+model SmsLog {
+  id        String    @id @default(cuid())
+  ownerId   String
+  tenantId  String?
+  phone     String
+  message   String
+  type      String    @default("RENT_REMINDER") // RENT_REMINDER | BILL | RECEIPT | CUSTOM
+  status    String    @default("QUEUED") // QUEUED | SENT | FAILED | SIMULATED
+  provider  String?
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  owner  User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, createdAt])
+}
+
+/// Money loaded onto the building's prepaid DESCO meter. An owner tops up
+/// several times a month, so each recharge is its own row; the electricity
+/// screen reconciles the month's top-ups against what the sub-meters billed.
+model MeterRecharge {
+  id           String   @id @default(cuid())
+  ownerId      String
+  propertyId   String
+  billingMonth String // "2026-09"
+  amount       Float
+  rechargedAt  DateTime @default(now())
+  meterNumber  String?
+  tokenRef     String? // DESCO token / transaction id
+  method       String   @default("BKASH") // CASH | BKASH | NAGAD | ROCKET | BANK | OTHER
+  note         String?
+  createdAt    DateTime @default(now())
+
+  owner    User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, billingMonth])
+  @@index([propertyId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  summary   String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
