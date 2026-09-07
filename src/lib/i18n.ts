@@ -1,9 +1,9 @@
 import type { Lang } from "./constants";
 
 /**
- * Tiny bilingual dictionary. Bangla is the default because that is what a
- * Bangladeshi bariwala reads; every screen can be flipped to English from the
- * top bar. Keys are grouped by screen for easy extension.
+ * Tiny bilingual dictionary. English is the default; every screen flips to
+ * Bangla from the top bar, numerals included. Keys are grouped by screen for
+ * easy extension.
  */
 const dict = {
   // brand / generic

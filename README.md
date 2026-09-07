@@ -6,14 +6,14 @@ payments and hands over a printable money receipt. A super admin manages every u
 
 ![Rent Collector dashboard](docs/dashboard.png)
 
-Built with Next.js 16 (App Router, server actions, Turbopack), Prisma 7 + **PostgreSQL**, Tailwind v4, bilingual Bangla/English UI, light dashboard with a dark mode toggle.
+Built with Next.js 16 (App Router, server actions, Turbopack), Prisma 7 + **PostgreSQL**, Tailwind v4, bilingual English/Bangla UI, light dashboard with a dark mode toggle.
 
 Type: **Inter** for Latin, **Noto Sans Bengali** for Bangla (close enough in metrics that mixed
 Bangla/English table rows stay on one baseline), JetBrains Mono reserved for identifiers like bill and
 receipt numbers. The scale starts at 13px — Bengali glyphs carry more detail than Latin and go muddy
 below that — with 44px controls and 15px body/nav text.
 
-The whole interface flips to Bangla from the top bar, numerals included:
+The interface ships in English and flips to Bangla from the top bar, numerals included:
 
 ![Bangla interface](docs/dashboard-bn.png)
 
@@ -66,7 +66,7 @@ the Premises Rent Control Act 1991, and BERC 2026 electricity tariffs.
 | Owners keep dues in their head or in a paper khata, and money handed over clears the oldest month first. | The ledger works the same way: `balance = opening due + bills − payments`, payments are re-applied FIFO across bills, and each bill prints "this month + previous due = payable". A paper-khata opening balance can be typed in when a tenant is added. |
 | Payments arrive as cash, bKash, Nagad, Rocket, bank or cheque. | Payment methods are first-class with brand colours and a TrxID field; collections are broken down by method. |
 | Owners care about profit, not just rent collected. | Expenses (repair, guard salary, holding tax, cleaning…) are tracked per property, and reports show billed vs collected vs spent vs net for 12 months, per month and per property. |
-| Bangla-first users, but bills often need English. | Whole UI toggles Bangla ⇄ English (Bangla default, Bangla numerals in Bangla mode); printed bills and receipts are always bilingual. |
+| Bangladeshi landlords read Bangla, but bills and records often need English. | Whole UI toggles English ⇄ Bangla (English default, Bangla numerals in Bangla mode); printed bills and receipts are always bilingual. |
 
 ---
 

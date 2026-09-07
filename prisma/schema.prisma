@@ -24,7 +24,7 @@ model User {
   role         String    @default("OWNER") // SUPER_ADMIN | OWNER
   status       String    @default("ACTIVE") // ACTIVE | SUSPENDED
   plan         String    @default("FREE") // FREE | PRO
-  language     String    @default("bn") // bn | en
+  language     String    @default("en") // en | bn
   address      String?
   nid          String?
   businessName String?

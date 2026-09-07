@@ -29,7 +29,7 @@ import {
 import { cx } from "@/lib/utils";
 import { t, pick } from "@/lib/i18n";
 import type { Lang } from "@/lib/constants";
-import { Dropdown } from "./client-bits";
+import { Dropdown, SubmitButton } from "./client-bits";
 import { setLanguage, setTheme } from "@/app/actions/preferences";
 import { logoutAction } from "@/app/actions/auth";
 import { initials } from "@/lib/format";
@@ -186,10 +186,12 @@ export function AppShell({
 
           <div className="flex items-center gap-1.5">
             <form action={setLanguage.bind(null, lang === "bn" ? "en" : "bn")}>
-              <button className="btn btn-ghost btn-sm gap-1.5" title="Language">
+              {/* switching writes the account preference and revalidates the
+                  tree, which is a database round trip — show it is working */}
+              <SubmitButton className="btn btn-ghost btn-sm gap-1.5" title="Language">
                 <Languages className="size-4" />
                 <span className="text-xs font-bold">{lang === "bn" ? "EN" : "বাং"}</span>
-              </button>
+              </SubmitButton>
             </form>
 
             <button className="btn btn-ghost btn-icon-sm" onClick={toggleTheme} aria-label="Theme">
