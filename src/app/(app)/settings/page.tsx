@@ -5,6 +5,7 @@ import { PageHeader, Card, CardHead, StatCard } from "@/components/ui";
 import { ProfileForm, PasswordForm } from "@/components/settings-forms";
 import { SubmitButton } from "@/components/client-bits";
 import { setLanguage } from "@/app/actions/preferences";
+import { logoutAction } from "@/app/actions/auth";
 import { isSimulationMode } from "@/lib/sms";
 import { num, formatDate } from "@/lib/format";
 import { pick, t } from "@/lib/i18n";
@@ -100,7 +101,7 @@ export default async function SettingsPage() {
               value={isSimulationMode() ? pick(lang, "ডেমো মোড", "Simulation") : pick(lang, "যুক্ত আছে", "Connected")}
             />
           </div>
-          <form action="/api/logout" method="post" className="mt-4">
+          <form action={logoutAction} className="mt-4">
             <button className="btn btn-outline btn-sm text-[color:var(--destructive)]">
               <LogOut className="size-4" />
               {t("logout", lang)}

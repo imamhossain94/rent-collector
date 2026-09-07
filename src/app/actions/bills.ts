@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { audit, str, optStr, nbr, int, dateOrNull } from "@/lib/utils";
+import { audit } from "@/lib/audit";
+import { str, optStr, nbr, int, dateOrNull } from "@/lib/utils";
 import {
   buildBillItems,
   dueDateFor,

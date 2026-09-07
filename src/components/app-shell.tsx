@@ -31,6 +31,7 @@ import { t, pick } from "@/lib/i18n";
 import type { Lang } from "@/lib/constants";
 import { Dropdown } from "./client-bits";
 import { setLanguage, setTheme } from "@/app/actions/preferences";
+import { logoutAction } from "@/app/actions/auth";
 import { initials } from "@/lib/format";
 
 type NavItem = { href: string; icon: ReactNode; label: string; exact?: boolean };
@@ -228,7 +229,7 @@ export function AppShell({
                 </Link>
               ) : null}
               <div className="divider my-1" />
-              <form action="/api/logout" method="post">
+              <form action={logoutAction}>
                 <button className="nav-link w-full text-left text-[color:var(--destructive)]">
                   <LogOut className="size-4" />
                   {t("logout", lang)}

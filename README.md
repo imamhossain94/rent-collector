@@ -6,7 +6,7 @@ payments and hands over a printable money receipt. A super admin manages every u
 
 ![Rent Collector dashboard](docs/dashboard.png)
 
-Built with Next.js 15 (App Router, server actions), Prisma + **PostgreSQL**, Tailwind v4, bilingual Bangla/English UI, light dashboard with a dark mode toggle.
+Built with Next.js 16 (App Router, server actions, Turbopack), Prisma 7 + **PostgreSQL**, Tailwind v4, bilingual Bangla/English UI, light dashboard with a dark mode toggle.
 
 Type: **Inter** for Latin, **Noto Sans Bengali** for Bangla (close enough in metrics that mixed
 Bangla/English table rows stay on one baseline), JetBrains Mono reserved for identifiers like bill and
@@ -41,7 +41,7 @@ Other scripts: `npm run db:reset` (wipe + reseed), `npm run db:studio`, `npm run
 Environment (`.env`) — see `.env.example`:
 
 ```
-DATABASE_URL="postgresql://user:password@host/dbname?sslmode=require"
+DATABASE_URL="postgresql://user:password@host/dbname?sslmode=verify-full"
 AUTH_SECRET="a long random string"
 SMS_PROVIDER=""      # blank = simulation mode: messages are stored, not sent
 SMS_API_KEY=""
@@ -165,6 +165,20 @@ Notes that matter in production:
 - **Region**: put the Vercel functions in the same region as the database (Neon `us-east-2` →
   Vercel `iad1`/`cle1`) — cross-region round trips dominate the request time otherwise.
 
+### Database wiring (Prisma 7)
+
+Prisma 7 no longer reads the connection URL from `schema.prisma`. Two files carry it instead:
+
+- `prisma.config.ts` — what the **CLI** uses (`db push`, `studio`, seeding). It prefers `DIRECT_URL`
+  when set, so migrations go over the unpooled host automatically.
+- `src/lib/prisma.ts` — what the **app** uses: `PrismaClient` gets a `PrismaPg` driver adapter built
+  from `DATABASE_URL`, and the instance is cached on `globalThis` so dev hot reloads don't open a new
+  pool per edit.
+
+Anything touching the database is server-only. `src/lib/audit.ts` is marked with `server-only` for
+that reason — it used to live in `src/lib/utils.ts`, which client components import for `cx()`, and
+that quietly pulled Prisma and node-postgres toward the browser bundle.
+
 ### Portability
 
 Enums are modelled as `String` columns with the values kept in `src/lib/constants.ts`, and the schema
@@ -177,6 +191,9 @@ already a plain foreign-key id, and the read paths live in `src/lib/queries.ts` 
 ```
 prisma/schema.prisma        data model
 prisma/seed.mjs             demo data (2 owners, 3 properties, 8 tenants, 3 months of bills, prepaid top-ups)
+prisma.config.ts            Prisma 7 CLI config — connection URL and seed command
+src/lib/prisma.ts           PrismaClient with the node-postgres driver adapter
+src/lib/audit.ts            server-only audit trail (kept out of client bundles)
 src/lib/billing.ts          bill building, ledger, FIFO allocation, numbering
 src/lib/format.ts           BDT money, Bangla numerals, dates, amount-in-words (bn + en)
 src/lib/i18n.ts             bilingual dictionary

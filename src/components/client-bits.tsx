@@ -153,7 +153,10 @@ export function Dropdown({
             "absolute z-50 mt-2 min-w-52 rounded border border-border bg-card p-1.5 shadow-lg",
             align === "right" ? "right-0" : "left-0",
           )}
-          onClick={() => setOpen(false)}
+          // Close on the next tick, not during the click: unmounting the menu
+          // synchronously cancels the default action of whatever was clicked,
+          // which is how the sign-out form silently never submitted.
+          onClick={() => window.setTimeout(() => setOpen(false), 0)}
         >
           {children}
         </div>

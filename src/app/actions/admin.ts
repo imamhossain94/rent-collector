@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin, hashPassword } from "@/lib/auth";
-import { audit, str, optStr } from "@/lib/utils";
+import { audit } from "@/lib/audit";
+import { str, optStr } from "@/lib/utils";
 import { normalizePhone, isValidBdPhone } from "@/lib/format";
 
 export async function toggleUserStatusAction(fd: FormData) {

@@ -1,5 +1,4 @@
-import { prisma } from "./prisma";
-
+/** Pure helpers only — this module is imported by client components too. */
 /* ------------------------- form data helpers ------------------------- */
 
 export function str(fd: FormData, key: string, fallback = ""): string {
@@ -37,24 +36,6 @@ export function dateOrNull(fd: FormData, key: string): Date | null {
 
 export function dateOr(fd: FormData, key: string, fallback: Date = new Date()): Date {
   return dateOrNull(fd, key) ?? fallback;
-}
-
-/* ---------------------------- audit trail ---------------------------- */
-
-export async function audit(
-  userId: string | null,
-  action: string,
-  entity: string,
-  entityId?: string | null,
-  summary?: string,
-): Promise<void> {
-  try {
-    await prisma.auditLog.create({
-      data: { userId, action, entity, entityId: entityId ?? null, summary: summary ?? null },
-    });
-  } catch {
-    // never let logging break a user action
-  }
 }
 
 /* --------------------------- action results -------------------------- */

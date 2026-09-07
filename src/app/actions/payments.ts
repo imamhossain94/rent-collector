@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser, getLang } from "@/lib/auth";
-import { audit, str, optStr, nbr, bool, dateOr } from "@/lib/utils";
+import { audit } from "@/lib/audit";
+import { str, optStr, nbr, bool, dateOr } from "@/lib/utils";
 import { nextReceiptNo, recomputeTenantBills, tenantBalance, allocatePayment } from "@/lib/billing";
 import { sendSms, receiptText } from "@/lib/sms";
 
